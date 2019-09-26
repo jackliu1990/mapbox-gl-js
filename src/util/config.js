@@ -24,7 +24,10 @@ const config: Config = {
     FEEDBACK_URL: 'https://apps.mapbox.com/feedback',
     REQUIRE_ACCESS_TOKEN: true,
     ACCESS_TOKEN: null,
-    MAX_PARALLEL_IMAGE_REQUESTS: 16
+    MAX_PARALLEL_IMAGE_REQUESTS: 16,
+    //TS-GIS start
+    CRS: "EPSG:4490"
+    //TS-GIS end
 };
 
 export default config;

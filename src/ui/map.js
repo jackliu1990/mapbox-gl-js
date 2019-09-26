@@ -52,6 +52,7 @@ import type {
     LightSpecification,
     SourceSpecification
 } from '../style-spec/types';
+import Config from '../util/config';
 
 type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 /* eslint-disable no-use-before-define */
@@ -317,7 +318,9 @@ class Map extends Camera {
         if (options.minZoom != null && options.maxZoom != null && options.minZoom > options.maxZoom) {
             throw new Error(`maxZoom must be greater than minZoom`);
         }
-
+        //TS-GIS start
+        Config.CRS = options.epsg;
+        //TS-GIS end
         const transform = new Transform(options.minZoom, options.maxZoom, options.renderWorldCopies);
         super(transform, options);
 

@@ -22,6 +22,7 @@ import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
 } from '../style-spec/types';
+import {getDefaultZoomOffset} from '../geo/coordinate_system';
 
 class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
@@ -56,6 +57,10 @@ class RasterTileSource extends Evented implements Source {
         this.scheme = 'xyz';
         this.tileSize = 512;
         this._loaded = false;
+        //TS-GIS start
+        this.zoomOffset = 0;
+        this._zoomOffset = getDefaultZoomOffset();
+        //TS-GIS end
 
         this._options = extend({ type: 'raster' }, options);
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
@@ -104,7 +109,7 @@ class RasterTileSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = this.map._requestManager.normalizeTileURL(tile.tileID.canonical.url(this.tiles, this.scheme), this.url, this.tileSize);
+        const url = this.map._requestManager.normalizeTileURL(tile.tileID.canonical.url(this.tiles, this.scheme, this._zoomOffset), this.url, this.tileSize);
         tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img) => {
             delete tile.request;
 

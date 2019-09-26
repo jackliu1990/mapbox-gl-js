@@ -18,6 +18,7 @@ import type Tile from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification} from '../style-spec/types';
+import {getDefaultZoomOffset} from '../geo/coordinate_system';
 
 class VectorTileSource extends Evented implements Source {
     type: 'vector';
@@ -51,8 +52,10 @@ class VectorTileSource extends Evented implements Source {
         this.tileSize = 512;
         this.reparseOverscaled = true;
         this.isTileClipped = true;
-
-        extend(this, pick(options, ['url', 'scheme', 'tileSize']));
+        this.zoomOffset = 0;
+        this._zoomOffset = getDefaultZoomOffset();
+        extend(this, pick(options, ['url', 'scheme', 'tileSize', 'zoomOffset']));
+        this._zoomOffset += this.zoomOffset;
         this._options = extend({ type: 'vector' }, options);
 
         this._collectResourceTiming = options.collectResourceTiming;
@@ -106,7 +109,7 @@ class VectorTileSource extends Evented implements Source {
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
-        const url = this.map._requestManager.normalizeTileURL(tile.tileID.canonical.url(this.tiles, this.scheme), this.url, null);
+        const url = this.map._requestManager.normalizeTileURL(tile.tileID.canonical.url(this.tiles, this.scheme,this._zoomOffset), this.url, null);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,

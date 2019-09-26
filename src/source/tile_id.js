@@ -6,7 +6,8 @@ import Point from '@mapbox/point-geometry';
 import MercatorCoordinate from '../geo/mercator_coordinate';
 
 import assert from 'assert';
-import { register } from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer';
+import Config from '../util/config'
 
 export class CanonicalTileID {
     z: number;
@@ -29,13 +30,23 @@ export class CanonicalTileID {
     }
 
     // given a list of urls, choose a url template and return a tile URL
-    url(urls: Array<string>, scheme: ?string) {
-        const bbox = getTileBBox(this.x, this.y, this.z);
+    url(urls: Array<string>, scheme: ?string, zoomOffset: number) {
+        //TS-GIS start
+        const bbox = function (t, e, r) {
+            if ("EPSG:3857" === Config.CRS) {
+                return getTileBBox(t, e, r);
+            }
+            if ("EPSG:4490" === Config.CRS) {
+                var a = 360 / Math.pow(2, r);
+                return [t * a - 180, 90 - (e + 1) * a, (t + 1) * a - 180, 90 - e * a].join(",");
+            }
+        }(this.x, this.y, this.z);
+        //TS-GIS end
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
         return urls[(this.x + this.y) % urls.length]
             .replace('{prefix}', (this.x % 16).toString(16) + (this.y % 16).toString(16))
-            .replace('{z}', String(this.z))
+            .replace('{z}', String(this.z + zoomOffset))
             .replace('{x}', String(this.x))
             .replace('{y}', String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
             .replace('{quadkey}', quadkey)
@@ -100,8 +111,8 @@ export class OverscaledTileID {
         // We're first testing for z == 0, to avoid a 32 bit shift, which is undefined.
         return parent.overscaledZ === 0 || (
             parent.overscaledZ < this.overscaledZ &&
-                parent.canonical.x === (this.canonical.x >> zDifference) &&
-                parent.canonical.y === (this.canonical.y >> zDifference));
+            parent.canonical.x === (this.canonical.x >> zDifference) &&
+            parent.canonical.y === (this.canonical.y >> zDifference));
     }
 
     children(sourceMaxZoom: number) {

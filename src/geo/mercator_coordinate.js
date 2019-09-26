@@ -2,6 +2,8 @@
 
 import LngLat from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
+import Config from '../util/config';
+import {hs, fs} from '../geo/coordinate_system';
 
 /*
  * The circumference of the world in meters at the given latitude.
@@ -15,9 +17,16 @@ export function mercatorXfromLng(lng: number) {
     return (180 + lng) / 360;
 }
 
+//TS-GIS start
 export function mercatorYfromLat(lat: number) {
-    return (180 - (180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)))) / 360;
+    return function (lat) {
+        return hs.getProjection(Config.CRS).yFromLat(lat);
+    }(lat);
 }
+/*export function mercatorYfromLat(lat: number) {
+ return (180 - (180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)))) / 360;
+ }*/
+//TS-GIS end
 
 export function mercatorZfromAltitude(altitude: number, lat: number) {
     return altitude / circumferenceAtLatitude(lat);
@@ -26,11 +35,15 @@ export function mercatorZfromAltitude(altitude: number, lat: number) {
 export function lngFromMercatorX(x: number) {
     return x * 360 - 180;
 }
-
+//TS-GIS start
 export function latFromMercatorY(y: number) {
+    return fs(y);
+}
+/*export function latFromMercatorY(y: number) {
     const y2 = 180 - y * 360;
     return 360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90;
-}
+}*/
+//TS-GIS end
 
 export function altitudeFromMercatorZ(z: number, y: number) {
     return z * circumferenceAtLatitude(latFromMercatorY(y));
@@ -83,9 +96,9 @@ class MercatorCoordinate {
         const lngLat = LngLat.convert(lngLatLike);
 
         return new MercatorCoordinate(
-                mercatorXfromLng(lngLat.lng),
-                mercatorYfromLat(lngLat.lat),
-                mercatorZfromAltitude(altitude, lngLat.lat));
+            mercatorXfromLng(lngLat.lng),
+            mercatorYfromLat(lngLat.lat),
+            mercatorZfromAltitude(altitude, lngLat.lat));
     }
 
     /**
@@ -98,8 +111,8 @@ class MercatorCoordinate {
      */
     toLngLat() {
         return new LngLat(
-                lngFromMercatorX(this.x),
-                latFromMercatorY(this.y));
+            lngFromMercatorX(this.x),
+            latFromMercatorY(this.y));
     }
 
     /**
